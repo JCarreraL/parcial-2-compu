@@ -1,24 +1,11 @@
-%% Funciones
+%% Soluciones (angulos)
 clc, clear
-coordsv = [
- 8.460, 10.103; % pos28
- 8.838, 7.709;  % pos30
- 9.225, 5.306;  % pos32
- 9.612, 2.903;  % pos34
- 9.999, 0.500;  % pos36 - punto más bajo de la V
-10.386, 2.903;  % pos38
-10.773, 5.306;  % pos40
-11.160, 7.709;  % pos42
-11.538, 10.103; % pos44
-];
+load('coords.mat')
+
+sols_j = [20,0,0;pseudo_newton(coords,1000)];
 
 
-
-sols_v = pseudo_newton(coordsv,1000);
-
-save("coordsv","coordsv")
-save("sols_v","sols_v")
-
+%% Funciones
 
 % Newton-Raphson
 function[sols] = pseudo_newton(coord,iteraciones)
@@ -41,6 +28,8 @@ function[sols] = pseudo_newton(coord,iteraciones)
 
         fx = matlabFunction(F);
         jx = matlabFunction(J);
+
+
         j_eval = jx(x{:});
         f_eval = fx(x{:});
 
@@ -69,3 +58,4 @@ function[sols] = pseudo_newton(coord,iteraciones)
         x0 = x;
     end
 end
+    
