@@ -1,0 +1,698 @@
+Utilizar Gauss Vx
+clc; clear
+
+% Definir los límites inicial y final
+a = -10;
+b = 10;
+
+% Número de puntos de Gauss
+n_gauss = 5;
+
+% Coeficientes de los 16 polinomios
+coef = [
+   13.076  -0.37864617   0           0.00064617;
+   12.698  -0.37670766   0.00193851 -0.00323085;
+   12.32   -0.3825232   -0.00775405  0.00327725;
+   11.933  -0.3881956    0.00207769 -0.00087813;
+   11.546  -0.3867857   -0.0005567   0.00023527;
+   11.159  -0.38708618   0.00014912 -6.30E-05;
+   10.772  -0.3869768   -3.98E-05    1.66E-05;
+   10.385  -0.3870066    9.94E-06   -3.31E-06;
+    9.998  -0.38699669   2.00E-15   -3.31E-06;
+    9.611  -0.3870063   -9.94E-06    1.66E-05;
+    9.224  -0.3869768    3.98E-05   -6.30E-05;
+    8.837  -0.38708618  -0.00014912  0.00023527;
+    8.45   -0.3867857    0.0005567  -0.00087813;
+    8.063  -0.3881956   -0.00207769  0.00327725;
+    7.676  -0.3825232    0.00775405 -0.00323085;
+    7.298  -0.37670766  -0.00193851  0.00064617
+];
+
+% Número de polinomios
+n_poly = size(coef, 1);
+
+% Longitud del subintervalo
+dx = (b - a) / n_poly;
+
+% Multiplicador común (Peso del sistema)
+mult = -0.019;
+
+% Inicializar celdas y resultados
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+subintervalos = zeros(n_poly, 2);
+
+for i = 1:n_poly
+    % Subintervalo para el i-ésimo polinomio
+    x0 = a + (i - 1)*dx;
+    x1 = a + i*dx;
+    subintervalos(i, :) = [x0, x1];
+
+    % Coeficientes
+    c = coef(i, :);
+
+    % Función anónima
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+
+    % Calcular integral por cuadratura de Gauss en su dominio
+    I(i) = cuadratura_gauss(f{i}, x0, x1, n_gauss);
+end
+
+% Graficar los polinomios evaluados por tramos con stem
+figure;
+hold on;
+title('Impulsos Vx Gauss');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x_vals = linspace(subintervalos(i,1), subintervalos(i,2), 10);
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+
+Utilizar Simpson Vx
+clc, clear
+
+
+% Se definen los límites
+a = -6;
+b = -2;
+
+% Se elige el tamaño de paso
+h = 0.05;
+
+
+
+% Coeficientes de los 22 polinomios de grado 4 (ordenados [a4 a3 a2 a1])
+coef = [
+   13.076  -0.37864617   0           0.00064617;
+   12.698  -0.37670766   0.00193851 -0.00323085;
+   12.32   -0.3825232   -0.00775405  0.00327725;
+   11.933  -0.3881956    0.00207769 -0.00087813;
+   11.546  -0.3867857   -0.0005567   0.00023527;
+   11.159  -0.38708618   0.00014912 -6.30E-05;
+   10.772  -0.3869768   -3.98E-05    1.66E-05;
+   10.385  -0.3870066    9.94E-06   -3.31E-06;
+    9.998  -0.38699669   2.00E-15   -3.31E-06;
+    9.611  -0.3870063   -9.94E-06    1.66E-05;
+    9.224  -0.3869768    3.98E-05   -6.30E-05;
+    8.837  -0.38708618  -0.00014912  0.00023527;
+    8.45   -0.3867857    0.0005567  -0.00087813;
+    8.063  -0.3881956   -0.00207769  0.00327725;
+    7.676  -0.3825232    0.00775405 -0.00323085;
+    7.298  -0.37670766  -0.00193851  0.00064617
+];
+
+
+% Multiplicador
+mult = -0.019;
+
+% Número de polinomios
+n_poly = size(coef, 1);
+
+% Longitud de cada subintervalo
+dx = (b - a) / n_poly;
+
+% Inicialización
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+
+% Cálculo de funciones e integrales por tramos
+for i = 1:n_poly
+    % Subintervalo para el polinomio i
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    
+    % Coeficientes del polinomio i
+    c = coef(i, :);
+    
+    % Función anónima
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+    
+    % Llamar a tu propia función Simpson
+    [I(i), ~, ~] = Simpson(f{i}, x0, x1, h);
+end
+
+% Gráfica con stem
+figure;
+hold on;
+title('Impulsos Vx Simspon');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    x_vals = x0:h:x1;
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+
+Utilizar Gauss Vy
+clc, clear
+
+% Se definen los límites
+a = -6;
+b = -2;
+
+% Número de puntos para Gauss
+n_gauss = 5;
+
+% Coeficientes de los 22 polinomios
+coef = [
+   13.103  -1.19719706   0           0.00019706;
+   11.906  -1.19660589   0.00059117 -0.00098528;
+   10.709  -1.1983739   -0.00236467 -0.00025594;
+    9.508  -1.20387655  -0.00313249  0.00500903;
+    8.306  -1.19511442   0.01189462 -0.0177802;
+    7.105  -1.22466578  -0.04144598  0.06411176;
+    5.903  -1.11522246  -0.1508893  -0.23666824;
+    4.702  -1.52344439  -0.55911123  0.88055561;
+    3.5     0            2.0825561  -0.88055561;
+    4.702   1.52344439  -0.55911123  0.23666824;
+    5.903   1.11522246   0.1508893  -0.06411176;
+    7.105   1.22466578  -0.04144598  0.0177802;
+    8.306   1.19511442   0.01189462 -0.00500903;
+    9.508   1.20387655  -0.00313249  0.00025594;
+   10.709   1.1983739   -0.00236467  0.00098528;
+   11.906   1.19660589   0.00059117 -0.00019706
+];
+
+
+% Número de polinomios
+n_poly = size(coef, 1);
+
+% Longitud del subintervalo
+dx = (b - a) / n_poly;
+
+% Multiplicador común
+mult = -0.019;
+
+% Inicializar celdas y resultados
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+subintervalos = zeros(n_poly, 2);
+
+for i = 1:n_poly
+    % Subintervalo para el i-ésimo polinomio
+    x0 = a + (i - 1)*dx;
+    x1 = a + i*dx;
+    subintervalos(i, :) = [x0, x1];
+
+    % Coeficientes
+    c = coef(i, :);
+
+    % Función anónima
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+
+    % Calcular integral por cuadratura de Gauss en su dominio
+    I(i) = cuadratura_gauss(f{i}, x0, x1, n_gauss);
+end
+
+% Graficar los polinomios evaluados por tramos con stem
+figure;
+hold on;
+title('Impulsos Vy Gauss');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x_vals = linspace(subintervalos(i,1), subintervalos(i,2), 10);
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+Utilizar Simpson Vy
+clc, clear
+
+
+% Se definen los límites
+a = -6;
+b = -2;
+
+% Se elige el tamaño de paso
+h = 0.05;
+
+
+
+% Coeficientes de los 22 polinomios de grado 4 (ordenados [a4 a3 a2 a1])
+coef = [
+   13.103  -1.19719706   0           0.00019706;
+   11.906  -1.19660589   0.00059117 -0.00098528;
+   10.709  -1.1983739   -0.00236467 -0.00025594;
+    9.508  -1.20387655  -0.00313249  0.00500903;
+    8.306  -1.19511442   0.01189462 -0.0177802;
+    7.105  -1.22466578  -0.04144598  0.06411176;
+    5.903  -1.11522246  -0.1508893  -0.23666824;
+    4.702  -1.52344439  -0.55911123  0.88055561;
+    3.5     0            2.0825561  -0.88055561;
+    4.702   1.52344439  -0.55911123  0.23666824;
+    5.903   1.11522246   0.1508893  -0.06411176;
+    7.105   1.22466578  -0.04144598  0.0177802;
+    8.306   1.19511442   0.01189462 -0.00500903;
+    9.508   1.20387655  -0.00313249  0.00025594;
+   10.709   1.1983739   -0.00236467  0.00098528;
+   11.906   1.19660589   0.00059117 -0.00019706
+];
+
+% Multiplicador
+mult = -0.019;
+
+% Número de polinomios
+n_poly = size(coef, 1);
+
+% Longitud de cada subintervalo
+dx = (b - a) / n_poly;
+
+% Inicialización
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+
+% Cálculo de funciones e integrales por tramos
+for i = 1:n_poly
+    % Subintervalo para el polinomio i
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    
+    % Coeficientes del polinomio i
+    c = coef(i, :);
+    
+    % Función anónima
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+    
+    % Llamar a tu propia función Simpson
+    [I(i), ~, ~] = Simpson(f{i}, x0, x1, h);
+end
+
+% Gráfica con stem
+figure;
+hold on;
+title('Impulsos Vy Simpson');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    x_vals = x0:h:x1;
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+Utilizar Gauss Jx
+clc; clear
+
+% Se definen los límites
+a = -6;
+b = -2;
+
+% Número de puntos para Gauss
+n_gauss = 5;
+
+% Coeficientes de los 22 polinomios (cada fila: [c4, c3, c2, c1])
+coef = [
+     0, -0.23349839, 0, 0;
+    -0.2, -0.13300321, 0.10049518, -0.26749197;
+    -0.5, -0.73448876, -0.70198073, 0.43646949;
+    -2, -0.82904175, 0.67047274, -0.77838598;
+    -2.5, -1.94934425, -1.72773021, 1.17707444;
+    -3.5, -1.87358133, 1.8043911, 0.07008822;
+    -1.5, 1.3469655, 2.01377578, -1.4727323;
+    -2.5, 1.59890311, -2.35852422, 1.00962111;
+    -2.25, -0.08928201, 0.6703391, -0.33105709;
+    -2, -0.25822491, 0.32282318, 0.06460726;
+    -1.75, -0.19631675, -0.12910103, 0.32258204;
+    -2, -0.51624569, 0.83887373, -1.35511493;
+    -2, -1.87136511, -3.22648455, 2.09784697;
+    -2.5, -2.03078522, 3.06706445, -1.03627923;
+    -0.3, 0.99450528, -0.71724414, -0.24932747;
+    -0.4, 1.05276126, 0.10002856, -0.15278985;
+    -3, 0.79444886, -0.35834099, 0.56389212;
+    -2, 1.76944326, 1.3333538, -1.1277864;
+    -2, 1.1277871, -1.97500108, 0.84721403;
+    -0.2, -0.28055614, 0.56666681, -0.28611111;
+     0, 0, 0, 0;
+     0, -0.0055553, -0.2916667, 0.09722223
+];
+
+% Multiplicador común
+mult = 0.019;
+
+% Número total de polinomios
+n_poly = size(coef, 1);
+
+% Longitud del subintervalo
+dx = (b - a) / n_poly;
+
+% Inicializar celdas y resultados
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+subintervalos = zeros(n_poly, 2);
+
+for i = 1:n_poly
+    % Subintervalo del polinomio i
+    x0 = a + (i - 1) * dx;
+    x1 = a + i * dx;
+    subintervalos(i, :) = [x0, x1];
+
+    % Coeficientes
+    c = coef(i, :);
+
+    % Definir función del polinomio i
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+
+    % Integrar con cuadratura de Gauss en su subintervalo
+    I(i) = cuadratura_gauss(f{i}, x0, x1, n_gauss);
+end
+
+% Graficar con stem por tramos
+figure;
+hold on;
+title('Impulsos Jx Gauss');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x_vals = linspace(subintervalos(i,1), subintervalos(i,2), 10);
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+
+Utilizar Simpson Jx
+clc; clear
+
+% Límites del intervalo total
+a = -6;
+b = -2;
+
+% Tamaño de paso para integración y graficación
+h = 0.01;
+
+% Coeficientes de los 22 polinomios (grado 4 incompletos)
+coef = [
+     0, -0.23349839, 0, 0;
+    -0.2, -0.13300321, 0.10049518, -0.26749197;
+    -0.5, -0.73448876, -0.70198073, 0.43646949;
+    -2, -0.82904175, 0.67047274, -0.77838598;
+    -2.5, -1.94934425, -1.72773021, 1.17707444;
+    -3.5, -1.87358133, 1.8043911, 0.07008822;
+    -1.5, 1.3469655, 2.01377578, -1.4727323;
+    -2.5, 1.59890311, -2.35852422, 1.00962111;
+    -2.25, -0.08928201, 0.6703391, -0.33105709;
+    -2, -0.25822491, 0.32282318, 0.06460726;
+    -1.75, -0.19631675, -0.12910103, 0.32258204;
+    -2, -0.51624569, 0.83887373, -1.35511493;
+    -2, -1.87136511, -3.22648455, 2.09784697;
+    -2.5, -2.03078522, 3.06706445, -1.03627923;
+    -0.3, 0.99450528, -0.71724414, -0.24932747;
+    -0.4, 1.05276126, 0.10002856, -0.15278985;
+    -3, 0.79444886, -0.35834099, 0.56389212;
+    -2, 1.76944326, 1.3333538, -1.1277864;
+    -2, 1.1277871, -1.97500108, 0.84721403;
+    -0.2, -0.28055614, 0.56666681, -0.28611111;
+     0, 0, 0, 0;
+     0, -0.0055553, -0.2916667, 0.09722223
+];
+
+% Multiplicador
+mult = 0.019;
+
+% Número de polinomios
+n_poly = size(coef, 1);
+
+% Longitud de cada subintervalo
+dx = (b - a) / n_poly;
+
+% Inicialización
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+
+% Cálculo de funciones e integrales por tramos
+for i = 1:n_poly
+    % Subintervalo para el polinomio i
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    
+    % Coeficientes del polinomio i
+    c = coef(i, :);
+    
+    % Función anónima
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+    
+    % Llamar a tu propia función Simpson
+    [I(i), ~, ~] = Simpson(f{i}, x0, x1, h);
+end
+
+% Gráfica con stem
+figure;
+hold on;
+title('Impulsos Jx Simpson');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    x_vals = x0:h:x1;
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+
+Utilizar Gauss Jy
+clc, clear
+
+% Se definen los límites
+a = -6;
+b = -2;
+
+% Número de puntos para Gauss
+n_gauss = 5;
+
+% Coeficientes de los 22 polinomios
+coef = [
+    10   -1.2083267     0           0.2083267;
+     9   -0.5833466     0.6249801  -0.34163349;
+   8.7   -0.3828689    -0.39992039  0.25820728;
+   8.2   -0.3835083     0.37470145 -0.19119562;
+     8   -0.2076898    -0.19888542  0.40657522;
+     8    0.61426501    1.02084023 -0.63510524;
+   9.25   0.7502947    -0.8840475  -0.3835876;
+   9.25   0.13321062    0.26706718 -0.1502778;
+   9.5    0.2165016    -0.18377162  0.46726543;
+    10    1.25075925    1.21802461 -0.46878393;
+    12    0.2542062    -0.18832711 -0.09123572;
+    14    1.62741346   -0.46471625 -0.16269722;
+    15    0.20988932   -0.9528079   0.74291858;
+    15    0.53302926    1.27594784 -0.80897705;
+    16    0.15063965   -1.15098345  0.49298879;
+    16    0.1650038     0.3279855  -0.16298209;
+    16    0.00220176   -0.16096034  0.15893858;
+    16    0.1596182    -0.3185545  -0.42777222;
+    12   -0.62961482    1.1024612  -0.27684996;
+    14   -3.6381604    -1.9060013   1.54417097;
+    10   -2.81766839    2.72650258 -0.90883419
+];
+
+% Multiplicador común
+mult = -0.019;
+
+% Número total de polinomios
+n_poly = size(coef, 1);
+
+% Longitud del subintervalo
+dx = (b - a) / n_poly;
+
+% Inicializar celdas y resultados
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+subintervalos = zeros(n_poly, 2);
+
+for i = 1:n_poly
+    % Subintervalo del polinomio i
+    x0 = a + (i - 1) * dx;
+    x1 = a + i * dx;
+    subintervalos(i, :) = [x0, x1];
+
+    % Coeficientes
+    c = coef(i, :);
+
+    % Definir función del polinomio i
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+
+    % Integrar con cuadratura de Gauss en su subintervalo
+    I(i) = cuadratura_gauss(f{i}, x0, x1, n_gauss);
+end
+
+% Graficar con stem por tramos
+figure;
+hold on;
+title('Impulsos Jy Gauss');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x_vals = linspace(subintervalos(i,1), subintervalos(i,2), 10);
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+Utilizar Simpson Jy
+clc, clear
+
+
+% Se definen los límites
+a = -6;
+b = -2;
+
+% Se elige el tamaño de paso
+h = 0.05;
+
+
+
+% Coeficientes de los 22 polinomios de grado 4 (ordenados [a4 a3 a2 a1])
+coef = [
+    10   -1.2083267     0           0.2083267;
+     9   -0.5833466     0.6249801  -0.34163349;
+   8.7   -0.3828689    -0.39992039  0.25820728;
+   8.2   -0.3835083     0.37470145 -0.19119562;
+     8   -0.2076898    -0.19888542  0.40657522;
+     8    0.61426501    1.02084023 -0.63510524;
+   9.25   0.7502947    -0.8840475  -0.3835876;
+   9.25   0.13321062    0.26706718 -0.1502778;
+   9.5    0.2165016    -0.18377162  0.46726543;
+    10    1.25075925    1.21802461 -0.46878393;
+    12    0.2542062    -0.18832711 -0.09123572;
+    14    1.62741346   -0.46471625 -0.16269722;
+    15    0.20988932   -0.9528079   0.74291858;
+    15    0.53302926    1.27594784 -0.80897705;
+    16    0.15063965   -1.15098345  0.49298879;
+    16    0.1650038     0.3279855  -0.16298209;
+    16    0.00220176   -0.16096034  0.15893858;
+    16    0.1596182    -0.3185545  -0.42777222;
+    12   -0.62961482    1.1024612  -0.27684996;
+    14   -3.6381604    -1.9060013   1.54417097;
+    10   -2.81766839    2.72650258 -0.90883419
+];
+
+% Multiplicador
+mult = -0.019;
+
+% Número de polinomios
+n_poly = size(coef, 1);
+
+% Longitud de cada subintervalo
+dx = (b - a) / n_poly;
+
+% Inicialización
+f = cell(1, n_poly);
+I = zeros(1, n_poly);
+
+% Cálculo de funciones e integrales por tramos
+for i = 1:n_poly
+    % Subintervalo para el polinomio i
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    
+    % Coeficientes del polinomio i
+    c = coef(i, :);
+    
+    % Función anónima
+    f{i} = @(x) mult * (c(1)*x.^3 + c(2)*x.^2 + c(3)*x.^1 + c(4));
+    
+    % Llamar a tu propia función Simpson
+    [I(i), ~, ~] = Simpson(f{i}, x0, x1, h);
+end
+
+% Gráfica con stem
+figure;
+hold on;
+title('Impulsos Jy Simpson');
+xlabel('x'); ylabel('I[N]');
+
+for i = 1:n_poly
+    x0 = a + (i - 1) * dx;
+    x1 = x0 + dx;
+    x_vals = x0:h:x1;
+    y_vals = f{i}(x_vals);
+    stem(x_vals, y_vals, 'filled', 'MarkerSize', 3);
+end
+
+grid on;
+
+Cuadratura de Gauss
+function [integralGauss, x, y] = cuadratura_gauss(f, a, b, n)
+    % Calcula una integral definida usando Cuadratura de Gauss
+    % f : función a integrar (como función anónima)
+    % a, b : límites de integración
+    % n : número de puntos (grado de precisión)
+
+    % Se calcula el polinomio de Legendre de orden n con una función
+    % auxiliar de Matlab
+    syms x
+    Pn = legendreP(n, x);
+
+    % Se convierte a coeficientes numéricos reales
+    c = sym2poly(Pn);
+
+    % Se calcula el conjunto de raíces reales (nodos en [-1, 1])
+    ti = sort(roots(c))';  % Se ordenan de menor a mayor
+
+    % Se deriva simbólicamente el polinomio
+    dPn = diff(Pn);
+
+    % Se inicializan los pesos
+    wi = zeros(1, n);
+
+    % Se calcula cada peso mediante la siguiente fórmula
+    for i = 1:n
+        dP_val = double(subs(dPn, x, ti(i)));
+        wi(i) = 2 / ((1 - ti(i)^2) * (dP_val)^2);
+    end
+
+    % Se define la integral
+    IntegralGauss = 0;
+
+    % Se aplica el cambio de variable y se evalúa la suma ponderada
+    for i = 1:n
+        xi = ((b - a) / 2) * ti(i) + (a + b) / 2;
+        IntegralGauss = IntegralGauss + wi(i) * f(xi);
+    end
+
+    % Se aplica el factor para escalar
+    integralGauss = ((b - a)/2) * IntegralGauss;
+end
+Simpson
+function [integralSimpson, x, y] = Simpson(f, a, b, h)
+
+    % f: Es una función anónima @(x)
+    % a: límite inferior de la integral
+    % b: límite superior de la integral
+    % h: paso de muestreo
+
+    % Se calcula el número de intervalos de muestreo
+    n = round((b - a)/h);
+
+    % Se asegura que el número de intervalos sea par
+    if mod(n,2) ~= 0
+        n = n + 1; % Si es impar, se suma 1 para asegurar paridad
+    end
+
+    % Se ajusta h con el nuevo número de intervalos
+    h = (b - a)/n;
+
+    % Se utiliza la función linspace para crear los puntos de los intervalos
+    x = linspace(a, b, n+1);
+    y = f(x);
+
+    % Se aplican las sumatorias específicas de Simpson
+    suma_pares = sum( y(3:2:end-1) );    % Suma de puntos pares
+    suma_impares = sum( y(2:2:end) );     % Suma de  puntos impares
+
+    % Se aplica la fórmula de integración de Simpson 
+    integralSimpson = (h/3) * ( y(1) + 2*suma_pares + 4*suma_impares + y(end));
+end
